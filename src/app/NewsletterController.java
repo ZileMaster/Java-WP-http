@@ -1,5 +1,7 @@
 package app;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import http.Request;
 import http.response.HtmlResponse;
 import http.response.RedirectResponse;
@@ -19,6 +21,10 @@ public class NewsletterController extends Controller {
 
     private static List<Map<String, String>> quotes = new ArrayList<>();
 
+    public NewsletterController(){
+        super(null);
+
+    }
     public NewsletterController(Request request) {
         super(request);
         this.request = request;
@@ -27,7 +33,7 @@ public class NewsletterController extends Controller {
     @Override
     public Response doGet() {
         StringBuilder htmlBodyBuilder = new StringBuilder();
-        htmlBodyBuilder.append("<form method=\"POST\" action=\"/add\">");
+        htmlBodyBuilder.append("<form method=\"POST\" action=\"/add-quote\">");
         htmlBodyBuilder.append("<label>Quote: </label><input name=\"quote\" type=\"text\"><br><br>");
         htmlBodyBuilder.append("<label>Author: </label><input name=\"author\" type=\"text\"><br><br>");
         htmlBodyBuilder.append("<button>Submit</button>");
@@ -36,11 +42,14 @@ public class NewsletterController extends Controller {
 
         htmlBodyBuilder.append("<h2>Quotes</h2>");
         for (Map<String, String> quoteMap : quotes) {
+            System.out.println("quoteandauthor" + quoteMap);
             String quote = quoteMap.get("quote");
+            quote = quote.substring(6);
             String author = quoteMap.get("author");
+            author = author.substring(7);
             htmlBodyBuilder.append("<blockquote>");
-            htmlBodyBuilder.append("<p>").append(quote).append("</p>");
-            htmlBodyBuilder.append("<footer>").append(author).append("</footer>");
+            htmlBodyBuilder.append("<p>Quote: <i>'").append(quote.toString()).append("'</i> </p>");
+            htmlBodyBuilder.append("<footer>~ <b>").append(author).append("</b></footer>");
             htmlBodyBuilder.append("</blockquote>");
         }
 
@@ -52,8 +61,12 @@ public class NewsletterController extends Controller {
             while ((line = in.readLine()) != null) {
                 quoteBuilder.append(line);
             }
-            String quote = quoteBuilder.toString();
-            System.out.println("ovojequotesapomocnog" + quote);
+            String jsonStr = quoteBuilder.toString();
+            System.out.println(jsonStr);
+            Gson gson = new Gson();
+            JsonObject json = gson.fromJson(jsonStr, JsonObject.class);
+            String quote = json.get("quote").getAsString();
+            System.out.println("Quote of the day: " + quote);
             socket.close();
             htmlBodyBuilder.append("<h2>Quote of the day: </h2>");
             htmlBodyBuilder.append("<blockquote>");
@@ -71,29 +84,16 @@ public class NewsletterController extends Controller {
         return new HtmlResponse(content);
     }
 
+    public void addQuote(String quote, String author) {
+        Map<String, String> quoteMap = new HashMap<>();
+        quoteMap.put("quote", quote);
+        quoteMap.put("author", author);
+        quotes.add(quoteMap);
+    }
+
     @Override
     public Response doPost() {
-        String params = request.toString();
 
-        Map<String, String> paramMap = new HashMap<>();
-        StringTokenizer st = new StringTokenizer(params, "&");
-        while( st.hasMoreTokens() ){
-            String pair = st.nextToken();
-            int idx = pair.indexOf("=");
-            if (idx >= 0) {
-                try {
-                    paramMap.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"), URLDecoder.decode(pair.substring(1 + idx), "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-        Map<String, String> quoteMap = new HashMap<>();
-        quoteMap.put("quote", paramMap.get("quote"));
-        quoteMap.put("author", paramMap.get("author"));
-        quotes.add(quoteMap);
-
-        return new RedirectResponse("/newsletter");
+        return new RedirectResponse("/quotes");
     }
 }

@@ -6,9 +6,9 @@ import http.response.Response;
 
 public class RequestHandler {
     public Response handle(Request request) throws Exception {
-        if (request.getPath().equals("/newsletter") && request.getHttpMethod().equals(HttpMethod.GET)) {
+        if (request.getPath().equals("/quotes") && request.getHttpMethod().equals(HttpMethod.GET)) {
             return (new NewsletterController(request)).doGet();
-        } else if (request.getPath().equals("/add") && request.getHttpMethod().equals(HttpMethod.POST)) {
+        } else if (request.getPath().equals("/add-quote") && request.getHttpMethod().equals(HttpMethod.POST)) {
             return (new NewsletterController(request)).doPost();
         }
 

@@ -1,5 +1,6 @@
 package http;
 
+import app.NewsletterController;
 import app.RequestHandler;
 import http.response.Response;
 
@@ -50,6 +51,19 @@ public class ServerThread implements Runnable {
 
             if (method.equals(HttpMethod.POST.toString())) {
                 // TODO: Ako je request method POST, procitaj telo zahteva (parametre)
+                StringBuilder body = new StringBuilder();
+                char[] buffer = new char[1024];
+                int bytesRead = -1;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    body.append(buffer, 0, bytesRead);
+                    if (!in.ready()) {
+                        break;
+                    }
+                }
+                NewsletterController news = new NewsletterController();
+                news.addQuote(body.toString().split("&")[0], body.toString().split("&")[1]);
+                System.out.println("Request body: " + body.toString());
+                System.out.println(body.toString().split("&")[0] + body.toString().split("&")[1] + "That is the quote");
             }
 
             Request request = new Request(HttpMethod.valueOf(method), path);
